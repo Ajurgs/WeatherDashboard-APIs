@@ -102,9 +102,9 @@ function buildCurrentWeather(data, name) {
         <h5 class="card-title">${name} (${new Date(
     (data.current.dt + data.timezone_offset) * 1000
   ).toDateString()})  
-            <img src="https://openweathermap.org/img/w/${
-              data.current.weather[0].icon
-            }.png"
+          <img src="https://openweathermap.org/img/w/${
+            data.current.weather[0].icon
+          }.png"
             alt="${data.current.weather[0].description}"/> 
         </h5>
         <p class="card-text">Temp: ${data.current.temp} F</p>
