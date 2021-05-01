@@ -2,16 +2,22 @@
 
 const apikey = "678e30c3be2469678a1d2ae3c9c3878e";
 
-const searchBtn = $("#citySearch");
+const searchForm = $("#citySearch");
 const prevCities = $("#searchedCities");
 const currentWeather = $("#currentWeather");
+const searchInput = $("input[name='citySearchForm']");
 const cities = JSON.parse(localStorage.getItem("cities")) || [];
-// event listeners
 
-searchBtn.on("submit", function (event) {
+// on start calls
+showCitiesList();
+
+// event listeners
+//--------------------------------------------
+// on the form submit
+searchForm.on("submit", function (event) {
   event.preventDefault();
   //get user input
-  let searchEntry = $("input[name='citySearchForm']").val().trim();
+  let searchEntry = searchInput.val().trim();
   let data = {};
   //validate
   if (!searchEntry) {
@@ -19,12 +25,29 @@ searchBtn.on("submit", function (event) {
     return;
   } else {
     console.log(searchEntry);
-    // getWeatherData(searchEntry);
-    addToCitiesList(searchEntry);
+    getWeatherData(searchEntry);
+    document.getElementById("citySearch").reset();
   }
 });
 
-function addToCitiesList(toAdd) {
+prevCities.on("click", ".btn", function (event) {
+  event.preventDefault();
+  // pull information from the button
+  let targetCity = {
+    name: event.target.innerText,
+    coord: {
+      lat: event.target.getAttribute("lat"),
+      lon: event.target.getAttribute("lon"),
+    },
+  };
+  // call the all in one API
+  callAllInOneAPI(targetCity.coord, targetCity.name, true);
+});
+
+// functions
+//---------------------------------------------
+// add city to list of previous cities buttons
+function addToCitiesList(toAdd, coord) {
   // get list of child objects in the list
   let currentCities = prevCities.children().children();
   // check to see if the city already in the list
@@ -37,7 +60,7 @@ function addToCitiesList(toAdd) {
   }
   // if not in the list add to the list
   let newLi = $("<li class='list-group-item'></li>").html(
-    `<button class = "btn btn-secondary">${toAdd}</button>`
+    `<button class = "btn btn-secondary" lat = "${coord.lat}" lon = "${coord.lon}" >${toAdd}</button>`
   );
   prevCities.append(newLi);
   saveCities();
@@ -57,7 +80,7 @@ function getWeatherData(city) {
     });
 }
 // get the all in one api call
-function callAllInOneAPI(coord, name) {
+function callAllInOneAPI(coord, name, prevBtn = false) {
   let url = `https://api.openweathermap.org/data/2.5/onecall?lat=${coord.lat}&lon=${coord.lon}&appid=${apikey}&units=imperial`;
   fetch(url)
     .then(function (response) {
@@ -66,7 +89,9 @@ function callAllInOneAPI(coord, name) {
     .then(function (data) {
       console.log(data);
       buildCurrentWeather(data, name);
-      addToCitiesList(name);
+      if (!prevBtn) {
+        addToCitiesList(name, coord);
+      }
     });
 }
 // build out the current weather card
@@ -104,9 +129,11 @@ function buildCurrentWeather(data, name) {
 // show saved cities
 function showCitiesList() {
   for (let i = 0; i < cities.length; i++) {
+    // create new list item that has a button with the lat and lon info
     let newLi = $("<li class='list-group-item'></li>").html(
-      `<button class = "btn btn-secondary">${cities[i]}</button>`
+      `<button class = "btn btn-secondary"  lat = "${cities[i].lat}" lon = "${cities[i].lon}" >${cities[i].name}</button>`
     );
+    // append the new list item to the list
     prevCities.append(newLi);
   }
 }
@@ -115,7 +142,11 @@ function saveCities() {
   let currentCities = prevCities.children().children();
   let cityNames = [];
   for (let i = 0; i < currentCities.length; i++) {
-    cityNames.push(currentCities[i].innerText);
+    cityNames.push({
+      name: currentCities[i].innerText,
+      lat: currentCities[i].getAttribute("lat"),
+      lon: currentCities[i].getAttribute("lon"),
+    });
   }
   localStorage.setItem("cities", JSON.stringify(cityNames));
 }
