@@ -5,6 +5,7 @@ const apikey = "678e30c3be2469678a1d2ae3c9c3878e";
 const searchForm = $("#citySearch");
 const prevCities = $("#searchedCities");
 const currentWeather = $("#currentWeather");
+const forecast = $("#forecast");
 const searchInput = $("input[name='citySearchForm']");
 const cities = JSON.parse(localStorage.getItem("cities")) || [];
 
@@ -50,17 +51,16 @@ prevCities.on("click", ".btn", function (event) {
 function addToCitiesList(toAdd, coord) {
   // get list of child objects in the list
   let currentCities = prevCities.children().children();
-  // check to see if the city already in the list
+  // check to see if the city already in the list if so exit function
   for (let i = 0; i < currentCities.length; i++) {
-    console.log(currentCities[i].innerText);
     if (currentCities[i].innerText.toLowerCase() === toAdd.toLowerCase()) {
       console.log("City already in list");
       return;
     }
   }
   // if not in the list add to the list
-  let newLi = $("<li class='list-group-item'></li>").html(
-    `<button class = "btn btn-secondary" lat = "${coord.lat}" lon = "${coord.lon}" >${toAdd}</button>`
+  let newLi = $("<li class='d-grid gap-2 mt-2'></li>").html(
+    `<button class = "btn btn-secondary btn-block" lat = "${coord.lat}" lon = "${coord.lon}" >${toAdd}</button>`
   );
   prevCities.append(newLi);
   saveCities();
@@ -79,7 +79,7 @@ function getWeatherData(city) {
       callAllInOneAPI(data.coord, data.name);
     });
 }
-// get the all in one api call
+// get the all in one api call        if function is called from the list of previous checked cities list default to false
 function callAllInOneAPI(coord, name, prevBtn = false) {
   let url = `https://api.openweathermap.org/data/2.5/onecall?lat=${coord.lat}&lon=${coord.lon}&appid=${apikey}&units=imperial`;
   fetch(url)
@@ -99,13 +99,15 @@ function buildCurrentWeather(data, name) {
   let temp = `
     <div class="card">
       <div class="card-body">
-        <h5 class="card-title">${name}  
+        <h5 class="card-title">${name} (${new Date(
+    (data.current.dt + data.timezone_offset) * 1000
+  ).toDateString()})  
             <img src="https://openweathermap.org/img/w/${
               data.current.weather[0].icon
             }.png"
             alt="${data.current.weather[0].description}"/> 
         </h5>
-        <p class="card-text" id="temp">Temp: ${data.current.temp} F</p>
+        <p class="card-text">Temp: ${data.current.temp} F</p>
         <p class="card-text">Wind: ${data.current.wind_speed} MPH</p>
         <p class="card-text">Humidity: ${data.current.humidity}%</p>
         <p class="card-text">
@@ -124,14 +126,37 @@ function buildCurrentWeather(data, name) {
     </div>
     `;
   currentWeather.html(temp);
+  build5Day(data);
+}
+// build out the five day forecast
+function build5Day(data) {
+  forecast.text("");
+  for (i = 1; i <= 5; i++) {
+    let newCard = $(`<div class="card col-2 p-1 m-1 bg-dark text-light">`).html(
+      `<h5 class="card-title">${new Date(
+        (data.daily[i].dt + data.timezone_offset) * 1000
+      ).toDateString()}</h5>
+    <img src="https://openweathermap.org/img/w/${
+      data.daily[i].weather[0].icon
+    }.png"" alt="${data.daily[i].weather[0].description}"  />
+    <p class="card-text">Temp: ${data.daily[i].temp.max} F / ${
+        data.daily[i].temp.min
+      } F</p>
+    <p class="card-text">Wind: ${data.daily[i].wind_speed} MPH</p>
+    <p class="card-text">Humidity: ${data.daily[i].humidity}%</p>
+    </div>
+  `
+    );
+    forecast.append(newCard);
+  }
 }
 
 // show saved cities
 function showCitiesList() {
   for (let i = 0; i < cities.length; i++) {
     // create new list item that has a button with the lat and lon info
-    let newLi = $("<li class='list-group-item'></li>").html(
-      `<button class = "btn btn-secondary"  lat = "${cities[i].lat}" lon = "${cities[i].lon}" >${cities[i].name}</button>`
+    let newLi = $("<li class='d-grid gap-2 mt-2'></li>").html(
+      `<button class = "btn btn-secondary btn-block"  lat = "${cities[i].lat}" lon = "${cities[i].lon}" >${cities[i].name}</button>`
     );
     // append the new list item to the list
     prevCities.append(newLi);
