@@ -19,31 +19,32 @@ searchBtn.on("submit", function (event) {
     return;
   } else {
     console.log(searchEntry);
-    getWeatherData(searchEntry);
+    // getWeatherData(searchEntry);
+    addToCitiesList(searchEntry);
   }
 });
 
 function addToCitiesList(toAdd) {
   // get list of child objects in the list
-  let currentCities = prevCities.children();
+  let currentCities = prevCities.children().children();
   // check to see if the city already in the list
-  for (i = 0; i < currentCities; i++) {
-    if (currentCities[i].val().toLowerCase() === toAdd.toLowerCase()) {
+  for (let i = 0; i < currentCities.length; i++) {
+    console.log(currentCities[i].innerText);
+    if (currentCities[i].innerText.toLowerCase() === toAdd.toLowerCase()) {
       console.log("City already in list");
-      break;
+      return;
     }
   }
   // if not in the list add to the list
-  //   let newLi = $("<li class='list-group-item'></li>").html(
-  //     `<button class = "btn btn-secondary">${toAdd}</button>`
-  //   );
-  //   prevCities.append(newLi);
+  let newLi = $("<li class='list-group-item'></li>").html(
+    `<button class = "btn btn-secondary">${toAdd}</button>`
+  );
+  prevCities.append(newLi);
+  saveCities();
 }
 
 function getWeatherData(city) {
   let url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apikey}&units=imperial`;
-  //
-  let fullData;
   // fetch the API Data
   fetch(url)
     .then(function (response) {
@@ -101,5 +102,20 @@ function buildCurrentWeather(data, name) {
 }
 
 // show saved cities
-function showCitiesList() {}
+function showCitiesList() {
+  for (let i = 0; i < cities.length; i++) {
+    let newLi = $("<li class='list-group-item'></li>").html(
+      `<button class = "btn btn-secondary">${cities[i]}</button>`
+    );
+    prevCities.append(newLi);
+  }
+}
 // save array of cities
+function saveCities() {
+  let currentCities = prevCities.children().children();
+  let cityNames = [];
+  for (let i = 0; i < currentCities.length; i++) {
+    cityNames.push(currentCities[i].innerText);
+  }
+  localStorage.setItem("cities", JSON.stringify(cityNames));
+}
