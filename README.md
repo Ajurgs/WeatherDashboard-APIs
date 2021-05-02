@@ -19,6 +19,10 @@ I learned a good amount about how to use third party apis as well as server side
 
 ## credits
 
+bootstrap
+
+jQuery
+
 weather data from
 [OpenWeather](https://openweathermap.org/)
 
